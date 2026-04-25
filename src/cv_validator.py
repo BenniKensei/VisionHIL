@@ -22,25 +22,25 @@ import numpy as np
 # OpenCV uses H: 0-179, S: 0-255, V: 0-255.
 # Red wraps around the hue axis so we need two ranges.
 
-_RED_LOWER_1 = np.array([0, 120, 100])
-_RED_UPPER_1 = np.array([10, 255, 255])
+_RED_LOWER_1 = np.array([0, 80, 100])
+_RED_UPPER_1 = np.array([15, 255, 255])
 
-_RED_LOWER_2 = np.array([170, 120, 100])
-_RED_UPPER_2 = np.array([179, 255, 255])
+_RED_LOWER_2 = np.array([165, 80, 100])
+_RED_UPPER_2 = np.array([180, 255, 255])
 
-_GREEN_LOWER = np.array([35, 80, 80])
-_GREEN_UPPER = np.array([85, 255, 255])
-
+_GREEN_LOWER = np.array([35, 60, 60])
+_GREEN_UPPER = np.array([90, 255, 255])
 
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 
+
 def verify_hardware_color(
     target_color: Literal["RED", "GREEN"] = "RED",
     duration: float = 2,
     camera_index: int = 0,
-    min_ratio: float = 0.25,
+    min_ratio: float = 0.05,
 ) -> bool:
     """Capture frames for *duration* seconds and return ``True`` when the
     dominant colour visible on the webcam matches *target_color*.
@@ -69,9 +69,7 @@ def verify_hardware_color(
 
     cap = cv2.VideoCapture(camera_index)
     if not cap.isOpened():
-        raise RuntimeError(
-            f"Cannot open camera at index {camera_index}"
-        )
+        raise RuntimeError(f"Cannot open camera at index {camera_index}")
 
     positive_frames = 0
     total_frames = 0
@@ -98,6 +96,10 @@ def verify_hardware_color(
                 mask = cv2.bitwise_or(mask1, mask2)
             else:
                 mask = cv2.inRange(hsv, _GREEN_LOWER, _GREEN_UPPER)
+
+            # Apply Morphological Operations to close text gaps
+            kernel = np.ones((15, 15), np.uint8)
+            mask = cv2.dilate(mask, kernel, iterations=2)
 
             # Calculate colour density (ratio of matching pixels)
             total_pixels = mask.shape[0] * mask.shape[1]

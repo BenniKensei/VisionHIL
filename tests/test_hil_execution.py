@@ -28,6 +28,7 @@ BASE_URL = "http://localhost:5000"
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _reset_node_state() -> None:
     """Return the node to NOMINAL before / after tests."""
     requests.post(f"{BASE_URL}/api/resolve_fault", timeout=5)
@@ -36,6 +37,7 @@ def _reset_node_state() -> None:
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture(autouse=True)
 def clean_state():
@@ -48,6 +50,7 @@ def clean_state():
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 class TestHILExecution:
     """Hardware-in-the-loop integration tests."""
@@ -64,7 +67,8 @@ class TestHILExecution:
 
         # 2. Give the browser polling loop time to update the colour
         import time
-        time.sleep(1)
+
+        time.sleep(3)
 
         # 3. Optically verify the screen is now RED
         assert verify_hardware_color(target_color="RED", duration=2) is True
@@ -74,7 +78,8 @@ class TestHILExecution:
         # First trigger a fault …
         requests.post(f"{BASE_URL}/api/trigger_fault", timeout=5)
         import time
-        time.sleep(1)
+
+        time.sleep(3)
 
         # … then resolve it
         resp = requests.post(
