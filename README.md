@@ -2,6 +2,14 @@
 
 **TL;DR**: A GUI-driven testing framework that verifies an edge node's operational state by pointing a webcam at a smartphone display, triggering test scenarios via REST API, and using OpenCV to optically validate that the screen changes color (green = operational, red = fault) in real-time. No false positives — only hardware validation.
 
+### Visual Examples
+
+**NOMINAL State** (Green detection):
+![VisionHIL NOMINAL](docs/VisionHIL_Nominal.png)
+
+**FAULT State** (Red detection):
+![VisionHIL FAULT](docs/VisionHIL_Fault.png)
+
 ---
 
 ## Quick Start
