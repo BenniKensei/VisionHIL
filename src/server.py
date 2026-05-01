@@ -6,6 +6,8 @@ The served HTML page polls the node state every 500ms and sets the
 background colour to **green** (NOMINAL) or **red** (FAULT).
 """
 
+import os
+
 from flask import Flask, jsonify, request
 
 app = Flask(__name__)
@@ -104,4 +106,9 @@ def resolve_fault():
 # Entry-point
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    # Clear any inherited reloader flag when the server is started directly.
+    # On Windows, Werkzeug can otherwise try to read WERKZEUG_SERVER_FD and fail.
+    if os.environ.get("WERKZEUG_RUN_MAIN") == "true" and "WERKZEUG_SERVER_FD" not in os.environ:
+        os.environ.pop("WERKZEUG_RUN_MAIN", None)
+
+    app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)

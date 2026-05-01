@@ -66,6 +66,18 @@ if (( elapsed >= HEALTH_TIMEOUT )); then
     exit 1
 fi
 
+echo ""
+echo "============================================================"
+echo " 📱 ACTION REQUIRED:"
+echo " 1. Open http://<your-pc-ip>:5000 on your mobile device."
+echo " 2. Point this PC's webcam at the mobile device screen."
+echo " 3. Press ENTER when ready to begin the HIL test suite..."
+echo "============================================================"
+read -r
+
+# Enable debug windows during the test suite
+export VISION_DEBUG=1
+
 # ---------------------------------------------------------------------------
 # 3. Execute the pytest HIL suite and capture its exit code.
 #    +e temporarily disables errexit so a test failure doesn't skip teardown.

@@ -9,8 +9,10 @@ webcam is pointed at the smartphone running the EdgeNode status page.
 
 from __future__ import annotations
 
+import threading
 import time
 from typing import Literal
+import os
 
 import cv2
 import numpy as np
@@ -30,6 +32,47 @@ _RED_UPPER_2 = np.array([180, 255, 255])
 
 _GREEN_LOWER = np.array([35, 60, 60])
 _GREEN_UPPER = np.array([90, 255, 255])
+
+# ---------------------------------------------------------------------------
+# Debug-mode singleton camera
+# ---------------------------------------------------------------------------
+# When VISION_DEBUG=1, a single VideoCapture is reused across calls so the
+# OpenCV preview windows stay open for the entire test session instead of
+# flashing between individual tests.
+
+_debug_capture: cv2.VideoCapture | None = None
+_capture_lock = threading.Lock()
+
+
+def _get_capture(camera_index: int) -> cv2.VideoCapture:
+    """Return a VideoCapture – reuses a singleton in debug mode."""
+    global _debug_capture
+    if _debug_capture is None or not _debug_capture.isOpened():
+        _debug_capture = cv2.VideoCapture(camera_index)
+    return _debug_capture
+
+
+def read_shared_frame(camera_index: int = 0) -> np.ndarray | None:
+    """Read a single frame from the shared camera, if available."""
+    with _capture_lock:
+        cap = _get_capture(camera_index)
+        if not cap.isOpened():
+            return None
+        ret, frame = cap.read()
+        if not ret:
+            return None
+        return frame
+
+
+def cleanup_debug() -> None:
+    """Release the debug singleton camera and close all OpenCV windows."""
+    global _debug_capture
+    with _capture_lock:
+        if _debug_capture is not None:
+            _debug_capture.release()
+            _debug_capture = None
+    cv2.destroyAllWindows()
+
 
 # ---------------------------------------------------------------------------
 # Public API
@@ -63,22 +106,21 @@ def verify_hardware_color(
         ``True`` if a majority of sampled frames contain the target colour
         at a density ≥ *min_ratio*.
     """
+    debug = os.environ.get("VISION_DEBUG") == "1"
     target_color = target_color.upper()
     if target_color not in ("RED", "GREEN"):
         raise ValueError(f"Unsupported target_color: {target_color!r}")
-
-    cap = cv2.VideoCapture(camera_index)
-    if not cap.isOpened():
-        raise RuntimeError(f"Cannot open camera at index {camera_index}")
 
     positive_frames = 0
     total_frames = 0
     deadline = time.monotonic() + duration
 
     try:
+        show_windows = os.environ.get("VISION_DEBUG_SHOW_WINDOWS") == "1"
+
         while time.monotonic() < deadline:
-            ret, frame = cap.read()
-            if not ret:
+            frame = read_shared_frame(camera_index)
+            if frame is None:
                 continue
 
             total_frames += 1
@@ -108,8 +150,16 @@ def verify_hardware_color(
 
             if ratio >= min_ratio:
                 positive_frames += 1
+
+            if debug and show_windows:
+                cv2.imshow("VisionHIL - Raw Feed", frame)
+                cv2.imshow(f"VisionHIL - {target_color} Mask", mask)
+                cv2.waitKey(1)
+
     finally:
-        cap.release()
+        # In debug mode the singleton camera stays open for the session.
+        if not debug:
+            pass
 
     if total_frames == 0:
         return False
