@@ -4,11 +4,16 @@
 
 ### Visual Examples
 
-**NOMINAL State** (Green detection):
-![VisionHIL NOMINAL](docs/VisionHIL_Nominal.png)
-
-**FAULT State** (Red detection):
-![VisionHIL FAULT](docs/VisionHIL_Fault.png)
+<div style="display: flex; gap: 20px; justify-content: center;">
+  <div>
+    <h4 style="text-align: center;">NOMINAL State (Green)</h4>
+    <img src="docs/VisionHIL_Nominal.png" width="400" alt="VisionHIL NOMINAL">
+  </div>
+  <div>
+    <h4 style="text-align: center;">FAULT State (Red)</h4>
+    <img src="docs/VisionHIL_Fault.png" width="400" alt="VisionHIL FAULT">
+  </div>
+</div>
 
 ---
 
